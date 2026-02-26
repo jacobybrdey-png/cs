@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <title>你的性格和哪座城市是天选CP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            touch-action: manipulation;
+        }
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            color: #333;
+            height: auto;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-attachment: fixed;
+        }
+        .container {
+            width: 100vw;
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            background: #ffffff;
+            position: relative;
+            overflow-x: hidden;
+        }
+        /* 顶部进度条区域（磨砂质感） */
+        .progress-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px 10px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 1px solid rgba(220, 220, 220, 0.2);
+        }
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2196f3, #9c27b0);
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
+        }
+        /* 题目滑动容器 */
+        .questions-slider {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* 通用页面样式（前置页/题目页/结果页） */
+        .page {
+            min-width: 100%;
+            min-height: 100vh;
+            padding: 80px 25px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        /* 前置页专属样式 */
+        .start-page {
+            align-items: center;
+            text-align: center;
+            padding-top: 100px;
+        }
+        /* 新增：标题+Logo容器样式 */
+        .title-container {
+            display: flex;
+            flex-direction: column; /* 修改为垂直排列，突出Logo */
+            align-items: center;
+            justify-content: center;
+            gap: 20px; /* 增加间距 */
+            margin-bottom: 25px;
+        }
+        /* 新增：Logo样式 */
+        .cp-logo {
+            width: 80px; /* 增大Logo尺寸，更醒目 */
+            height: 80px;
+            flex-shrink: 0;
+            margin-bottom: 10px;
+        }
+        .start-page .title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #2c3e50;
+            line-height: 1.4;
+            letter-spacing: 1px;
+            margin-bottom: 0; /* 移除原有的margin-bottom，交给容器控制 */
+        }
+        .start-page .desc {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            padding: 0 10px;
+        }
+        /* 提示板块容器 - 优化版 */
+        .tips-box {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 50px;
+            width: 100%;
+            padding: 0 10px;
+        }
+        /* 单个提示板块 - 精致版 */
+        .tip-item {
+            padding: 25px 15px;
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        /* 每个卡片的专属渐变背景和配色 */
+        .tip-item:nth-child(1) {
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8fb 100%);
+            border: 1px solid #d1e7f0;
+        }
+        .tip-item:nth-child(1) .tip-icon {
+            color: #4299e1;
+        }
+        .tip-item:nth-child(1) .tip-main {
+            color: #2563eb;
+        }
+        .tip-item:nth-child(1) .tip-sub {
+            color: #4a5568;
+        }
+        
+        .tip-item:nth-child(2) {
+            background: linear-gradient(135deg, #f0fdf4 0%, #f7fee7 100%);
+            border: 1px solid #d9f9e9;
+        }
+        .tip-item:nth-child(2) .tip-icon {
+            color: #4ade80;
+        }
+        .tip-item:nth-child(2) .tip-main {
+            color: #16a34a;
+        }
+        .tip-item:nth-child(2) .tip-sub {
+            color: #4a5568;
+        }
+        
+        .tip-item:nth-child(3) {
+            background: linear-gradient(135deg, #fef7fb 0%, #fdf2f8 100%);
+            border: 1px solid #fce7f3;
+        }
+        .tip-item:nth-child(3) .tip-icon {
+            color: #a855f7;
+        }
+        .tip-item:nth-child(3) .tip-main {
+            color: #7e22ce;
+        }
+        .tip-item:nth-child(3) .tip-sub {
+            color: #4a5568;
+        }
+        
+        .tip-item:nth-child(4) {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+        }
+        .tip-item:nth-child(4) .tip-icon {
+            color: #06b6d4;
+        }
+        .tip-item:nth-child(4) .tip-main {
+            color: #0891b2;
+        }
+        .tip-item:nth-child(4) .tip-sub {
+            color: #4a5568;
+        }
+        
+        /* 卡片hover效果 */
+        .tip-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* 卡片图标样式 */
+        .tip-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* 卡片主要文字 */
+        .tip-main {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 6px;
+        }
+        
+        /* 卡片次要文字 */
+        .tip-sub {
+            font-size: 13px;
+            line-height: 1.4;
+            opacity: 0.8;
+        }
+        
+        /* 开始测试按钮 */
+        .start-btn {
+            width: 80%;
+            padding: 20px;
+            background: linear-gradient(to right, #2196f3, #9c27b0);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.25);
+        }
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.35);
+        }
+        /* 题目页专属样式 */
+        .question-page {
+            justify-content: flex-start;
+            padding: 100px 25px 80px;
+        }
+        .question-text {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 35px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            flex: 1;
+            justify-content: center;
+        }
+        .option {
+            padding: 22px 20px;
+            border: 2px solid #eee;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 17px;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+        .option:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border-color: #e3f2fd;
+        }
+        .option.selected {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f8fb 100%);
+            border-color: #2196f3;
+            color: #2196f3;
+            font-weight: 500;
+        }
+        .option.selected::after {
+            content: "✓";
+            position: absolute;
+            right: 20px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        /* 底部按钮区域 */
+        .btn-group {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 25px 20px;
+            background: #fff;
+            display: flex;
+            gap: 15px;
+            border-top: 1px solid #f5f5f5;
+            z-index: 99;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .prev-btn {
+            background: #f8f9fa;
+            color: #666;
+        }
+        .next-btn {
+            background: linear-gradient(to right, #2196f3, #0d47a1);
+            color: white;
+        }
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(to right, #2196f3, #0d47a1);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        .submit-btn.active {
+            display: block;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(33, 150, 243, 0.3);
+        }
+        /* 结果页样式 - 重构版 */
+        .result-page {
+            display: none;
+            padding-top: 90px;
+            padding-bottom: 50px;
+            align-items: flex-start;
+            text-align: left;
+            overflow-y: auto;
+        }
+        /* 主匹配城市卡片 */
+        .main-result-card {
+            width: 100%;
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8fb 100%);
+            border-radius: 24px;
+            padding: 30px 25px;
+            margin-bottom: 35px;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.1);
+        }
+        .match-degree {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .match-degree-text {
+            font-size: 15px;
+            color: #4299e1;
+            margin-bottom: 8px;
+        }
+        .match-percent {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2196f3;
+            line-height: 1;
+        }
+        .main-city-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .main-city-title i {
+            font-size: 22px;
+            color: #2196f3;
+        }
+        /* 关键词标签组 */
+        .tags-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .personality-tag {
+            padding: 8px 18px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #2196f3;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #d1e7f0;
+        }
+        .feature-tag {
+            padding: 8px 18px;
+            background: #4299e1;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        /* 匹配理由 */
+        .match-reason-section {
+            margin-top: 25px;
+        }
+        .match-reason-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .match-reason-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #4a5568;
+            text-align: left;
+        }
+        /* 其他适合城市标题 */
+        .other-cities-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-left: 5px;
+        }
+        /* 其他适合城市列表 */
+        .other-cities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-bottom: 40px;
+        }
+        /* 其他城市卡片 */
+        .other-city-card {
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f0f0f0;
+        }
+        .city-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .city-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .city-name i {
+            font-size: 16px;
+            color: #666;
+        }
+        .city-percent {
+            font-size: 16px;
+            font-weight: 600;
+            color: #48bb78;
+            background: rgba(72, 187, 120, 0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .city-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .city-tag {
+            padding: 6px 14px;
+            background: rgba(224, 231, 255, 0.6);
+            color: #4299e1;
+            border-radius: 16px;
+            font-size: 13px;
+        }
+        .city-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #718096;
+        }
+        /* 适配小屏手机 */
+        @media (max-width: 375px) {
+            .start-page .title {
+                font-size: 24px;
+            }
+            .cp-logo {
+                width: 60px;
+                height: 60px;
+            }
+            .question-text {
+                font-size: 20px;
+            }
+            .option {
+                padding: 20px 18px;
+                font-size: 16px;
+            }
+            .match-percent {
+                font-size: 40px;
+            }
+            .main-city-title {
+                font-size: 22px;
+            }
+            .tip-main {
+                font-size: 16px !important;
+            }
+            .tip-sub {
+                font-size: 12px !important;
+            }
+            .tip-icon {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 20px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部进度条区域 -->
+        <div class="progress-wrapper">
+            <div class="progress-text" id="progress-text">准备开始</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- 题目滑动容器 -->
+        <div class="questions-slider" id="questions-slider">
+            <!-- 前置页：开始测试页 -->
+            <div class="page start-page" data-index="0">
+                <!-- 新增：标题+Logo容器 -->
+                <div class="title-container">
+                    <!-- 极简风格定位Logo -->
+                    <svg class="cp-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 极简圆形背景 -->
+                        <circle cx="50" cy="50" r="40" fill="#42a5f5"/>
+                        <!-- 极简定位图标 - 仅保留核心线条 -->
+                        <path d="M50 30 L50 70 M35 50 L65 50 M50 35 A15 15 0 1 1 50 65 A15 15 0 1 1 50 35 Z" 
+                              fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                    <div class="title">你的性格和哪座城市是天选CP</div>
+                </div>
+                <div class="desc">
+                    奔波的日常里，总有一座城，适配你的灵魂节奏。<br>
+                    不用奔赴山海，美好本就与你相伴 —— 是藏在烟火里的温柔，是融于日常的松弛。<br>
+                    测一测，找到你的心灵原乡，从此心安有处，岁岁安然。
+                </div>
+                
+                <!-- 优化后的提示板块（替换极简图标） -->
+                <div class="tips-box">
+                    <div class="tip-item">
+                        <div class="tip-icon">📝</div>
+                        <div class="tip-main">30道精选题目</div>
+                        <div class="tip-sub">覆盖生活各方面</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon">⏱️</div>
+                        <div class="tip-main">约5分钟完成</div>
+                        <div class="tip-sub">轻松快速测试</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon">📍</div>
+                        <div class="tip-main">16座城市匹配</div>
+                        <div class="tip-sub">发现你的天选之城</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon">🧮</div>
+                        <div class="tip-main">智能匹配算法</div>
+                        <div class="tip-sub">基于六维性格模型</div>
+                    </div>
+                </div>
+                
+                <button class="start-btn" id="start-btn">开始测试</button>
+            </div>
+
+            <!-- 第1题 -->
+            <div class="page question-page" data-index="1">
+                <div class="question-text">1. 你更喜欢哪种生活节奏？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 快节奏、机会多</div>
+                    <div class="option" data-score="2">B. 慢节奏、悠闲自在</div>
+                    <div class="option" data-score="3">C. 文艺有格调、不紧不慢</div>
+                    <div class="option" data-score="4">D. 温暖舒服、人情味浓</div>
+                </div>
+            </div>
+
+            <!-- 第2题 -->
+            <div class="page question-page" data-index="2">
+                <div class="question-text">2. 周末你更愿意？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 逛街、探店、见朋友</div>
+                    <div class="option" data-score="2">B. 宅家、看书、发呆</div>
+                    <div class="option" data-score="3">C. 看展、喝咖啡、散步</div>
+                    <div class="option" data-score="4">D. 吃美食、逛夜市</div>
+                </div>
+            </div>
+
+            <!-- 第3题 -->
+            <div class="page question-page" data-index="3">
+                <div class="question-text">3. 你理想的天气是？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 四季分明</div>
+                    <div class="option" data-score="2">B. 温和少雨</div>
+                    <div class="option" data-score="3">C. 凉爽舒适</div>
+                    <div class="option" data-score="4">D. 温暖湿润</div>
+                </div>
+            </div>
+
+            <!-- 第4题 -->
+            <div class="page question-page" data-index="4">
+                <div class="question-text">4. 你更看重城市的？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 发展前景、工资高</div>
+                    <div class="option" data-score="2">B. 生活成本低、压力小</div>
+                    <div class="option" data-score="3">C. 颜值高、有氛围感</div>
+                    <div class="option" data-score="4">D. 美食多、生活舒服</div>
+                </div>
+            </div>
+
+            <!-- 第5题 -->
+            <div class="page question-page" data-index="5">
+                <div class="question-text">5. 交朋友你更在意？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 能力、三观、上进</div>
+                    <div class="option" data-score="2">B. 舒服、轻松、不卷</div>
+                    <div class="option" data-score="3">C. 品味、审美、有趣</div>
+                    <div class="option" data-score="4">D. 真诚、热情、好相处</div>
+                </div>
+            </div>
+
+            <!-- 第6题 -->
+            <div class="page question-page" data-index="6">
+                <div class="question-text">6. 你能接受的通勤时间？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 1小时内都可以</div>
+                    <div class="option" data-score="2">B. 最好20分钟内</div>
+                    <div class="option" data-score="3">C. 边走边逛也不错</div>
+                    <div class="option" data-score="4">D. 近一点，方便吃吃喝喝</div>
+                </div>
+            </div>
+
+            <!-- 第7题 -->
+            <div class="page question-page" data-index="7">
+                <div class="question-text">7. 你更偏爱哪种建筑风格？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 现代高楼、都市感</div>
+                    <div class="option" data-score="2">B. 古朴老街、烟火气</div>
+                    <div class="option" data-score="3">C. 小资洋气、设计感</div>
+                    <div class="option" data-score="4">D. 传统温馨、接地气</div>
+                </div>
+            </div>
+
+            <!-- 第8题 -->
+            <div class="page question-page" data-index="8">
+                <div class="question-text">8. 压力大时你会？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 搞钱、搞事业</div>
+                    <div class="option" data-score="2">B. 躺平、放空</div>
+                    <div class="option" data-score="3">C. 看展、旅行治愈</div>
+                    <div class="option" data-score="4">D. 大吃一顿、开心最重要</div>
+                </div>
+            </div>
+
+            <!-- 第9题 -->
+            <div class="page question-page" data-index="9">
+                <div class="question-text">9. 你更向往的城市气质？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 拼搏、热血、年轻</div>
+                    <div class="option" data-score="2">B. 安逸、佛系、慢生活</div>
+                    <div class="option" data-score="3">C. 浪漫、文艺、精致</div>
+                    <div class="option" data-score="4">D. 热闹、温暖、有人情味</div>
+                </div>
+            </div>
+
+            <!-- 第10题 -->
+            <div class="page question-page" data-index="10">
+                <div class="question-text">10. 你对“吃”的态度？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 方便快捷、效率优先</div>
+                    <div class="option" data-score="2">B. 简单清淡、健康就好</div>
+                    <div class="option" data-score="3">C. 颜值高、仪式感</div>
+                    <div class="option" data-score="4">D. 好吃最重要，不挑环境</div>
+                </div>
+            </div>
+
+            <!-- 第11题 -->
+            <div class="page question-page" data-index="11">
+                <div class="question-text">11. 你更适合的工作氛围？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 竞争强、成长快</div>
+                    <div class="option" data-score="2">B. 稳定轻松、不加班</div>
+                    <div class="option" data-score="3">C. 创意自由、氛围好</div>
+                    <div class="option" data-score="4">D. 同事和睦、像家人</div>
+                </div>
+            </div>
+
+            <!-- 第12题 -->
+            <div class="page question-page" data-index="12">
+                <div class="question-text">12. 你喜欢的城市绿化？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 都市公园多</div>
+                    <div class="option" data-score="2">B. 随处都是绿植</div>
+                    <div class="option" data-score="3">C. 精致景观、好拍照</div>
+                    <div class="option" data-score="4">D. 路边大树、很舒服</div>
+                </div>
+            </div>
+
+            <!-- 第13题 -->
+            <div class="page question-page" data-index="13">
+                <div class="question-text">13. 你能接受的房价/房租？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 贵一点但值得</div>
+                    <div class="option" data-score="2">B. 便宜、压力小</div>
+                    <div class="option" data-score="3">C. 中等，环境好就行</div>
+                    <div class="option" data-score="4">D. 合理，生活舒服最重要</div>
+                </div>
+            </div>
+
+            <!-- 第14题 -->
+            <div class="page question-page" data-index="14">
+                <div class="question-text">14. 你更偏爱？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 大城市繁华</div>
+                    <div class="option" data-score="2">B. 小城安逸</div>
+                    <div class="option" data-score="3">C. 浪漫海滨/山城</div>
+                    <div class="option" data-score="4">D. 烟火气十足</div>
+                </div>
+            </div>
+
+            <!-- 第15题 -->
+            <div class="page question-page" data-index="15">
+                <div class="question-text">15. 你更像哪种人？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 野心家、搞钱人</div>
+                    <div class="option" data-score="2">B. 佛系、知足常乐</div>
+                    <div class="option" data-score="3">C. 浪漫主义、颜控</div>
+                    <div class="option" data-score="4">D. 乐天派、吃货</div>
+                </div>
+            </div>
+
+            <!-- 第16题 -->
+            <div class="page question-page" data-index="16">
+                <div class="question-text">16. 出门你更在意？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 交通方便、效率高</div>
+                    <div class="option" data-score="2">B. 人少、不拥挤</div>
+                    <div class="option" data-score="3">C. 好拍照、出片</div>
+                    <div class="option" data-score="4">D. 有好吃的、好逛</div>
+                </div>
+            </div>
+
+            <!-- 第17题 -->
+            <div class="page question-page" data-index="17">
+                <div class="question-text">17. 你对“下雨”的感受？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 麻烦，影响通勤</div>
+                    <div class="option" data-score="2">B. 安静，适合睡觉</div>
+                    <div class="option" data-score="3">C. 浪漫，有氛围</div>
+                    <div class="option" data-score="4">D. 凉快，更想吃东西</div>
+                </div>
+            </div>
+
+            <!-- 第18题 -->
+            <div class="page question-page" data-index="18">
+                <div class="question-text">18. 你更看重？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 前途与发展</div>
+                    <div class="option" data-score="2">B. 安稳与轻松</div>
+                    <div class="option" data-score="3">C. 审美与情绪</div>
+                    <div class="option" data-score="4">D. 快乐与满足</div>
+                </div>
+            </div>
+
+            <!-- 第19题 -->
+            <div class="page question-page" data-index="19">
+                <div class="question-text">19. 你喜欢的夜晚氛围？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 灯火璀璨、夜生活丰富</div>
+                    <div class="option" data-score="2">B. 安静、早点休息</div>
+                    <div class="option" data-score="3">C. 路灯温柔、晚风舒服</div>
+                    <div class="option" data-score="4">D. 夜市热闹、人声鼎沸</div>
+                </div>
+            </div>
+
+            <!-- 第20题 -->
+            <div class="page question-page" data-index="20">
+                <div class="question-text">20. 你更不能忍受？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 没前途、穷</div>
+                    <div class="option" data-score="2">B. 压力大、内卷</div>
+                    <div class="option" data-score="3">C. 土、没审美</div>
+                    <div class="option" data-score="4">D. 冷漠、没人情味</div>
+                </div>
+            </div>
+
+            <!-- 第21题 -->
+            <div class="page question-page" data-index="21">
+                <div class="question-text">21. 你更适合的城市气质？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 年轻、活力、机会多</div>
+                    <div class="option" data-score="2">B. 养老、安逸、慢节奏</div>
+                    <div class="option" data-score="3">C. 文艺、浪漫、有格调</div>
+                    <div class="option" data-score="4">D. 热情、温暖、烟火气</div>
+                </div>
+            </div>
+
+            <!-- 第22题 -->
+            <div class="page question-page" data-index="22">
+                <div class="question-text">22. 你更愿意把钱花在？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 搞钱投资、自我提升</div>
+                    <div class="option" data-score="2">B. 储蓄、安稳</div>
+                    <div class="option" data-score="3">C. 颜值、生活品质</div>
+                    <div class="option" data-score="4">D. 美食、体验</div>
+                </div>
+            </div>
+
+            <!-- 第23题 -->
+            <div class="page question-page" data-index="23">
+                <div class="question-text">23. 你喜欢的出行方式？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 地铁、高效</div>
+                    <div class="option" data-score="2">B. 步行、骑车</div>
+                    <div class="option" data-score="3">C. 公交、慢慢看风景</div>
+                    <div class="option" data-score="4">D. 随便，方便吃就行</div>
+                </div>
+            </div>
+
+            <!-- 第24题 -->
+            <div class="page question-page" data-index="24">
+                <div class="question-text">24. 你对“人情世故”的态度？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 理性、简单就好</div>
+                    <div class="option" data-score="2">B. 佛系、懒得社交</div>
+                    <div class="option" data-score="3">C. 讲究质感、舒服为主</div>
+                    <div class="option" data-score="4">D. 热情、喜欢热闹</div>
+                </div>
+            </div>
+
+            <!-- 第25题 -->
+            <div class="page question-page" data-index="25">
+                <div class="question-text">25. 你理想的四季？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 春夏秋冬很明显</div>
+                    <div class="option" data-score="2">B. 四季如春</div>
+                    <div class="option" data-score="3">C. 凉爽舒服为主</div>
+                    <div class="option" data-score="4">D. 温暖不冷</div>
+                </div>
+            </div>
+
+            <!-- 第26题 -->
+            <div class="page question-page" data-index="26">
+                <div class="question-text">26. 你更像？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 奋斗批</div>
+                    <div class="option" data-score="2">B. 躺平党</div>
+                    <div class="option" data-score="3">C. 文艺青年</div>
+                    <div class="option" data-score="4">D. 快乐干饭人</div>
+                </div>
+            </div>
+
+            <!-- 第27题 -->
+            <div class="page question-page" data-index="27">
+                <div class="question-text">27. 你更看重城市的？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 就业机会</div>
+                    <div class="option" data-score="2">B. 生活压力</div>
+                    <div class="option" data-score="3">C. 颜值氛围</div>
+                    <div class="option" data-score="4">D. 美食浓度</div>
+                </div>
+            </div>
+
+            <!-- 第28题 -->
+            <div class="page question-page" data-index="28">
+                <div class="question-text">28. 你对“网红城市”的看法？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 机会多，可以搞钱</div>
+                    <div class="option" data-score="2">B. 太吵，不喜欢</div>
+                    <div class="option" data-score="3">C. 好看，适合拍照生活</div>
+                    <div class="option" data-score="4">D. 好吃，想去住</div>
+                </div>
+            </div>
+
+            <!-- 第29题 -->
+            <div class="page question-page" data-index="29">
+                <div class="question-text">29. 你希望别人怎么形容你？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 优秀、厉害、能干</div>
+                    <div class="option" data-score="2">B. 佛系、通透、自在</div>
+                    <div class="option" data-score="3">C. 有品味、温柔</div>
+                    <div class="option" data-score="4">D. 有趣、好相处</div>
+                </div>
+            </div>
+
+            <!-- 第30题 -->
+            <div class="page question-page" data-index="30">
+                <div class="question-text">30. 你心中最完美的城市关键词？</div>
+                <div class="options">
+                    <div class="option" data-score="1">A. 梦想、搞钱、未来</div>
+                    <div class="option" data-score="2">B. 安逸、躺平、自在</div>
+                    <div class="option" data-score="3">C. 浪漫、文艺、治愈</div>
+                    <div class="option" data-score="4">D. 美食、温暖、烟火</div>
+                </div>
+            </div>
+
+            <!-- 结果页 - 重构版 -->
+            <div class="page result-page" id="result-page" data-index="31">
+                <!-- 主匹配城市卡片 -->
+                <div class="main-result-card">
+                    <div class="match-degree">
+                        <div class="match-degree-text">匹配度</div>
+                        <div class="match-percent" id="main-match-percent">85%</div>
+                    </div>
+                    <div class="main-city-title">
+                        <i>📍</i>
+                        <span id="main-city-name">成都</span>
+                    </div>
+                    <div class="tags-group">
+                        <div class="personality-tag" id="main-tag-1">躺平型</div>
+                        <div class="personality-tag" id="main-tag-2">社交型</div>
+                        <div class="personality-tag" id="main-tag-3">文艺型</div>
+                    </div>
+                    <div class="tags-group">
+                        <div class="feature-tag" id="main-feature-1">巴适生活</div>
+                        <div class="feature-tag" id="main-feature-2">休闲惬意</div>
+                        <div class="feature-tag" id="main-feature-3">美食文化</div>
+                    </div>
+                    <div class="match-reason-section">
+                        <div class="match-reason-title">
+                            <i>✨</i>
+                            匹配理由
+                        </div>
+                        <div class="match-reason-content" id="main-match-reason">
+                            你和成都一样，懂得享受生活又不失烟火气。成都的慢节奏、美食文化、休闲氛围，都与你追求生活品质、注重内心平和的性格相契合。作为躺平型人格，你享受在茶馆里喝茶聊天的松弛，也热爱街头巷尾的地道美食，这座城市的包容与安逸，正是你灵魂的最佳栖息地。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 其他适合的城市 -->
+                <div class="other-cities-title">其他适合你的城市</div>
+                <div class="other-cities-list" id="other-cities-list">
+                    <!-- 动态生成其他城市卡片 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部按钮组（题目页显示，前置页/结果页隐藏） -->
+        <div class="btn-group" id="btn-group" style="display: none;">
+            <button class="nav-btn prev-btn" id="prev-btn" disabled>上一题</button>
+            <button class="nav-btn next-btn" id="next-btn">下一题</button>
+            <button class="submit-btn" id="submit-btn">查看结果</button>
+        </div>
+    </div>
+
+    <script>
+        // 核心变量
+        const slider = document.getElementById('questions-slider');
+        const startBtn = document.getElementById('start-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const resultPage = document.getElementById('result-page');
+        const btnGroup = document.getElementById('btn-group');
+        
+        let currentIndex = 0; // 当前页面索引（0=前置页，1-30=题目，31=结果页）
+        const totalQuestions = 30; // 总题数
+        const answers = new Array(totalQuestions).fill(null); // 存储每题答案
+        
+        // 16座热门旅游城市配置（含匹配规则、百分比、关键词、理由）
+        const cityConfig = {
+            // 第一档：奋斗型（30-45分）
+            上海: {
+                scoreRange: [30, 45],
+                matchPercent: "88%",
+                personalityTags: ["奋斗型", "高效型", "精英型"],
+                featureTags: ["魔都魅力", "金融中心", "多元包容"],
+                reason: "你目标明确、追求高效，上海的快节奏与无限机遇完美契合你的野心。这座城市的国际化视野、前沿的商业氛围，能让你的才华充分施展。你享受拼搏带来的成就感，也能驾驭魔都的多元与复杂，在这里，每一份努力都能找到对应的价值。"
+            },
+            深圳: {
+                scoreRange: [30, 45],
+                matchPercent: "86%",
+                personalityTags: ["创新型", "年轻型", "实干型"],
+                featureTags: ["科技之都", "创业热土", "活力无限"],
+                reason: "你充满活力、敢于尝试，深圳的年轻与创新精神和你高度同频。这座没有天花板的城市，不看背景只看实力，正好匹配你务实、敢闯的性格。你不畏惧挑战，享受从零到一的创造过程，深圳的包容与机遇，是你实现梦想的最佳土壤。"
+            },
+            北京: {
+                scoreRange: [30, 45],
+                matchPercent: "84%",
+                personalityTags: ["抱负型", "文化型", "坚韧型"],
+                featureTags: ["帝都底蕴", "文化中心", "机会云集"],
+                reason: "你有理想、有格局，北京的厚重底蕴与多元机会吸引着你。这座城市既有千年历史的沉淀，也有新时代的活力，能满足你对事业和精神的双重追求。你能适应高压的竞争环境，也懂得在胡同里寻找生活的温度，与北京的气质不谋而合。"
+            },
+            // 第二档：躺平型（46-60分）
+            成都: {
+                scoreRange: [46, 60],
+                matchPercent: "85%",
+                personalityTags: ["躺平型", "社交型", "文艺型"],
+                featureTags: ["巴适生活", "休闲惬意", "美食文化"],
+                reason: "你懂得享受生活又不失烟火气。成都的慢节奏、美食文化、休闲氛围，都与你追求生活品质、注重内心平和的性格相契合。作为躺平型人格，你享受在茶馆里喝茶聊天的松弛，也热爱街头巷尾的地道美食，这座城市的包容与安逸，正是你灵魂的最佳栖息地。"
+            },
+            昆明: {
+                scoreRange: [46, 60],
+                matchPercent: "83%",
+                personalityTags: ["佛系型", "自然型", "松弛型"],
+                featureTags: ["四季如春", "民族风情", "慢生活"],
+                reason: "你向往自然、追求松弛，昆明的气候与慢生活完美治愈你。这座春城没有极端的温度，只有和煦的阳光和满眼的绿意，匹配你不喜内卷、偏爱安逸的性格。你享受与自然相处的时光，也喜欢多元的民族文化，昆明的温柔与包容，能让你找到内心的平静。"
+            },
+            大理: {
+                scoreRange: [46, 60],
+                matchPercent: "81%",
+                personalityTags: ["治愈型", "自由型", "佛系型"],
+                featureTags: ["风花雪月", "苍山洱海", "慢时光"],
+                reason: "你渴望自由、追求治愈，大理的诗意与慢节奏深深吸引你。苍山洱海的自然之美，古城的慵懒时光，正好匹配你不喜拘束、向往自然的性格。你不追求物质的极致，更看重精神的丰盈，在大理，每一缕风、每一片云，都能让你找到内心的归属。"
+            },
+            丽江: {
+                scoreRange: [46, 60],
+                matchPercent: "79%",
+                personalityTags: ["文艺型", "躺平型", "自然型"],
+                featureTags: ["古城风韵", "慢生活", "世外桃源"],
+                reason: "你偏爱浪漫、向往诗意，丽江的柔软时光与你灵魂契合。古城的青石板路、潺潺流水，雪山的纯净与壮阔，匹配你追求精神满足的性格。你享受慢下来的生活，喜欢在不经意间发现美好，丽江的慵懒与浪漫，能让你彻底放松，找回生活的本真。"
+            },
+            // 第三档：文艺型（61-75分）
+            杭州: {
+                scoreRange: [61, 75],
+                matchPercent: "87%",
+                personalityTags: ["文艺型", "浪漫型", "精致型"],
+                featureTags: ["江南水乡", "诗意栖居", "互联网+"],
+                reason: "你兼具浪漫与理性，杭州的诗意与活力完美匹配你。西湖的柔情、西溪的静谧，满足你对美的追求；而互联网之都的活力，又契合你对品质生活的要求。你喜欢在自然中寻找灵感，也享受现代生活的便捷，杭州的古典与现代交融，正是你理想的生活状态。"
+            },
+            厦门: {
+                scoreRange: [61, 75],
+                matchPercent: "85%",
+                personalityTags: ["小资型", "浪漫型", "文艺型"],
+                featureTags: ["海滨风情", "文艺清新", "慢生活"],
+                reason: "你偏爱小资、追求浪漫，厦门的文艺与清新深深吸引你。鼓浪屿的异域风情、环岛路的海风，匹配你注重生活质感的性格。你喜欢精致的小确幸，享受慢下来的时光，厦门的温柔与美好，能让你在琐碎的日常中，始终保持对生活的热爱与期待。"
+            },
+            青岛: {
+                scoreRange: [61, 75],
+                matchPercent: "82%",
+                personalityTags: ["浪漫型", "文艺型", "休闲型"],
+                featureTags: ["红瓦绿树", "海滨风情", "啤酒文化"],
+                reason: "你热爱生活、追求浪漫，青岛的山海风情与你高度契合。红瓦绿树的欧式建筑、清爽的海风、醇厚的啤酒，匹配你既文艺又接地气的性格。你喜欢在美景中享受生活，也乐于和朋友欢聚，青岛的热情与浪漫，能让你找到归属感与幸福感。"
+            },
+            苏州: {
+                scoreRange: [61, 75],
+                matchPercent: "80%",
+                personalityTags: ["雅致型", "文艺型", "慢享型"],
+                featureTags: ["江南园林", "水乡柔情", "精致生活"],
+                reason: "你偏爱雅致、追求精致，苏州的温婉与细腻完美契合你。园林的一步一景、平江路的悠然，匹配你注重细节、热爱生活的性格。你喜欢在慢时光中品味美好，享受传统文化带来的滋养，苏州的古典与雅致，能让你找到心灵的栖居之所。"
+            },
+            // 第四档：烟火型（76-120分）
+            重庆: {
+                scoreRange: [76, 120],
+                matchPercent: "89%",
+                personalityTags: ["热辣型", "吃货型", "直爽型"],
+                featureTags: ["山城魔幻", "火锅文化", "人间烟火"],
+                reason: "你热情直爽、热爱美食，重庆的热辣与烟火气完美匹配你。这座8D魔幻城市的江湖气息，匹配你不做作、真实率性的性格。你享受热闹的氛围，热爱酣畅淋漓的快乐，重庆的火锅、夜景、江湖菜，能让你彻底释放天性，活得热气腾腾。"
+            },
+            长沙: {
+                scoreRange: [76, 120],
+                matchPercent: "87%",
+                personalityTags: ["快乐型", "吃货型", "热闹型"],
+                featureTags: ["娱乐之都", "嗦粉文化", "星城活力"],
+                reason: "你乐观开朗、热爱热闹，长沙的快乐与烟火气深深吸引你。嗦粉、喝茶颜、逛夜市，这座城市的每一处都充满了生活气息，匹配你追求快乐、爱吃爱玩的性格。你享受当下的美好，喜欢和朋友欢聚，长沙的热情与活力，能让你每天都充满幸福感。"
+            },
+            广州: {
+                scoreRange: [76, 120],
+                matchPercent: "84%",
+                personalityTags: ["吃货型", "务实型", "包容型"],
+                featureTags: ["食在广州", "广式早茶", "人间烟火"],
+                reason: "你务实包容、热爱美食，广州的烟火气与你高度契合。早茶的精致、宵夜的热闹、街头的地道小吃，匹配你注重生活本味的性格。你不挑剔、易满足，喜欢实实在在的美好，广州的包容与温暖，能让你在平淡的日常中，找到最真实的快乐。"
+            },
+            西安: {
+                scoreRange: [76, 120],
+                matchPercent: "81%",
+                personalityTags: ["文化型", "传统型", "探索型"],
+                featureTags: ["古都韵味", "历史文化", "西北风情"],
+                reason: "你热爱传统、喜欢探索，西安的厚重与烟火气完美匹配你。兵马俑的震撼、城墙的沧桑、回民街的美食，匹配你既怀旧又爱吃的性格。你喜欢在历史中寻找答案，也享受市井的热闹，西安的古今交融，能让你在时光的长河中，找到属于自己的节奏。"
+            },
+            南京: {
+                scoreRange: [76, 120],
+                matchPercent: "78%",
+                personalityTags: ["温润型", "吃货型", "文化型"],
+                featureTags: ["六朝古都", "秦淮风韵", "美食之都"],
+                reason: "你温润包容、热爱生活，南京的厚重与烟火气深深吸引你。鸭血粉丝汤的鲜香、老门东的古韵、秦淮河的夜色，匹配你既有文化底蕴又接地气的性格。你懂得欣赏历史的厚重，也享受日常的美好，南京的温柔与大气，能让你找到归属感。"
+            }
+        };
+        
+        // 开始测试按钮点击事件
+        startBtn.addEventListener('click', function() {
+            currentIndex = 1;
+            slideTo(currentIndex);
+            updateNavButtons();
+            updateProgress();
+            btnGroup.style.display = 'flex'; // 显示底部按钮组
+        });
+        
+        // 选项点击事件
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', function() {
+                // 获取当前题目索引（页面索引-1）
+                const page = this.closest('.question-page');
+                const pageIndex = parseInt(page.dataset.index);
+                const qIndex = pageIndex - 1;
+                
+                // 取消同题其他选项选中状态
+                const siblings = this.parentElement.querySelectorAll('.option');
+                siblings.forEach(sib => sib.classList.remove('selected'));
+                
+                // 选中当前选项
+                this.classList.add('selected');
+                
+                // 保存答案
+                answers[qIndex] = parseInt(this.dataset.score);
+                
+                // 更新下一题按钮状态
+                updateNextBtnStatus();
+            });
+        });
+        
+        // 上一题按钮事件
+        prevBtn.addEventListener('click', function() {
+            if (currentIndex > 1) {
+                currentIndex--;
+                slideTo(currentIndex);
+                updateNavButtons();
+                updateProgress();
+                
+                // 自动选中已答过的选项
+                selectAnsweredOption(currentIndex - 1);
+            }
+        });
+        
+        // 下一题按钮事件
+        nextBtn.addEventListener('click', function() {
+            if (currentIndex < totalQuestions) {
+                currentIndex++;
+                slideTo(currentIndex);
+                updateNavButtons();
+                updateProgress();
+                
+                // 自动选中已答过的选项
+                selectAnsweredOption(currentIndex - 1);
+            }
+        });
+        
+        // 提交按钮事件
+        submitBtn.addEventListener('click', calculateResult);
+        
+        // 滑动到指定页面
+        function slideTo(index) {
+            slider.style.transform = `translateX(-${index * 100}%)`;
+        }
+        
+        // 更新导航按钮状态
+        function updateNavButtons() {
+            // 上一题按钮：第1题禁用
+            prevBtn.disabled = currentIndex === 1;
+            
+            // 下一题/提交按钮切换：最后一题显示提交，其他显示下一题
+            if (currentIndex === totalQuestions) {
+                nextBtn.style.display = 'none';
+                submitBtn.classList.add('active');
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.classList.remove('active');
+            }
+            
+            // 更新下一题按钮状态
+            updateNextBtnStatus();
+        }
+        
+        // 更新下一题按钮状态（当前题有答案才可用）
+        function updateNextBtnStatus() {
+            if (currentIndex >= 1 && currentIndex <= totalQuestions) {
+                nextBtn.disabled = answers[currentIndex - 1] === null;
+            } else {
+                nextBtn.disabled = true;
+            }
+        }
+        
+        // 更新进度条和进度文本
+        function updateProgress() {
+            if (currentIndex === 0) {
+                // 前置页
+                progressText.textContent = '准备开始';
+                progressBar.style.width = '0%';
+            } else if (currentIndex <= totalQuestions) {
+                // 题目页
+                const progress = ((currentIndex) / totalQuestions) * 100;
+                progressText.textContent = `${currentIndex}/${totalQuestions} 题`;
+                progressBar.style.width = `${progress}%`;
+            } else {
+                // 结果页
+                progressText.textContent = '完成测试！';
+                progressBar.style.width = '100%';
+            }
+        }
+        
+        // 自动选中已答过的选项
+        function selectAnsweredOption(qIndex) {
+            if (answers[qIndex] !== null) {
+                const page = document.querySelector(`.question-page[data-index="${qIndex + 1}"]`);
+                const options = page.querySelectorAll('.option');
+                options.forEach(opt => {
+                    if (parseInt(opt.dataset.score) === answers[qIndex]) {
+                        opt.classList.add('selected');
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                });
+            }
+        }
+        
+        // 计算并显示结果
+        function calculateResult() {
+            // 计算总分
+            let totalScore = answers.reduce((sum, score) => sum + (score || 0), 0);
+            
+            // 匹配主城市
+            let mainCity = '';
+            let mainCityData = null;
+            
+            // 找到匹配的主城市
+            for (const city in cityConfig) {
+                const config = cityConfig[city];
+                if (totalScore >= config.scoreRange[0] && totalScore <= config.scoreRange[1]) {
+                    mainCity = city;
+                    mainCityData = config;
+                    break;
+                }
+            }
+            
+            // 如果没匹配到，默认成都
+            if (!mainCity) {
+                mainCity = '成都';
+                mainCityData = cityConfig['成都'];
+            }
+            
+            // 渲染主城市结果
+            document.getElementById('main-match-percent').textContent = mainCityData.matchPercent;
+            document.getElementById('main-city-name').textContent = mainCity;
+            document.getElementById('main-tag-1').textContent = mainCityData.personalityTags[0];
+            document.getElementById('main-tag-2').textContent = mainCityData.personalityTags[1];
+            document.getElementById('main-tag-3').textContent = mainCityData.personalityTags[2];
+            document.getElementById('main-feature-1').textContent = mainCityData.featureTags[0];
+            document.getElementById('main-feature-2').textContent = mainCityData.featureTags[1];
+            document.getElementById('main-feature-3').textContent = mainCityData.featureTags[2];
+            document.getElementById('main-match-reason').textContent = mainCityData.reason;
+            
+            // 生成6个备选城市（排除主城市，按匹配度排序）
+            const otherCities = [];
+            const basePercents = [78, 75, 72, 70, 68, 65]; // 备选城市基础百分比
+            let percentIndex = 0;
+            
+            for (const city in cityConfig) {
+                if (city !== mainCity && otherCities.length < 6) {
+                    const config = {
+                        name: city,
+                        percent: `${basePercents[percentIndex]}%`,
+                        tags: cityConfig[city].personalityTags.slice(0, 3),
+                        desc: `${cityConfig[city].featureTags[0]} · ${cityConfig[city].featureTags[1]} · ${cityConfig[city].featureTags[2]}`
+                    };
+                    otherCities.push(config);
+                    percentIndex++;
+                }
+            }
+            
+            // 渲染备选城市列表
+            const otherCitiesList = document.getElementById('other-cities-list');
+            otherCitiesList.innerHTML = '';
+            
+            otherCities.forEach(city => {
+                const cityCard = `
+                    <div class="other-city-card">
+                        <div class="city-header">
+                            <div class="city-name">
+                                <i>📍</i>
+                                ${city.name}
+                            </div>
+                            <div class="city-percent">${city.percent}</div>
+                        </div>
+                        <div class="city-tags">
+                            <div class="city-tag">${city.tags[0]}</div>
+                            <div class="city-tag">${city.tags[1]}</div>
+                            <div class="city-tag">${city.tags[2]}</div>
+                        </div>
+                        <div class="city-desc">
+                            ${city.desc} - 这座城市的气质与你有较高契合度，也是不错的选择～
+                        </div>
+                    </div>
+                `;
+                otherCitiesList.innerHTML += cityCard;
+            });
+            
+            // 跳转到结果页
+            currentIndex = 31;
+            slideTo(currentIndex);
+            updateProgress();
+            btnGroup.style.display = 'none'; // 隐藏底部按钮
+            resultPage.style.display = 'flex';
+        }
+        
+        // 初始化
+        updateProgress();
+    </script>
+</body>
+</html>
